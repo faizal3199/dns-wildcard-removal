@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/miekg/dns"
@@ -38,7 +37,7 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 				case *dns.A:
 					recordValue = v.A.String()
 				case *dns.CNAME:
-					recordValue = strings.TrimRight(v.Target, ".")
+					recordValue = v.Target
 				case *dns.NS:
 					recordValue = v.Ns
 				}

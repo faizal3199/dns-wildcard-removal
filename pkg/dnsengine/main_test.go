@@ -1,4 +1,4 @@
-package dnsengine
+package dnsengine_test
 
 import (
 	"reflect"
@@ -44,7 +44,7 @@ func TestGetDNSRecords(t *testing.T) {
 				Records: []common.DNSRecord{
 					{
 						Type:  "CNAME",
-						Value: "a.root-servers.net",
+						Value: "a.root-servers.net.",
 					},
 					{
 						Type:  "A",
@@ -64,7 +64,7 @@ func TestGetDNSRecords(t *testing.T) {
 				Records: []common.DNSRecord{
 					{
 						Type:  "CNAME",
-						Value: "xx.root-servers.net",
+						Value: "xx.root-servers.net.",
 					},
 				},
 			},
@@ -74,7 +74,7 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for NX domain",
 			args: args{
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
-				domain:    "nx.dns-test.faizalhasanwala.me",
+				domain:    "nx.root-servers.net",
 			},
 			want: common.DomainRecords{
 				Records: []common.DNSRecord{},
