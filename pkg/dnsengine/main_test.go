@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
+	"github.com/faizal3199/dns-wildcard-removal/pkg/dnsengine"
 )
 
 func TestGetDNSRecords(t *testing.T) {
@@ -96,7 +97,7 @@ func TestGetDNSRecords(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetDNSRecords(tt.args.resolvers, tt.args.domain)
+			got, err := dnsengine.GetDNSRecords(tt.args.resolvers, tt.args.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetDNSRecords() error = %v, wantErr %v", err, tt.wantErr)
 				return
