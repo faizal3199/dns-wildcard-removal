@@ -43,8 +43,14 @@ type DNSRecord struct {
 }
 
 /*
-DomainRecords is used to contain multiple records for same domain
+DNSRecordSet is used to contain multiple records for same domain
 */
+type DNSRecordSet = []DNSRecord
+
+/*
+DomainRecords contains name of the domain and it's DNS records
+ */
 type DomainRecords struct {
-	Records []DNSRecord
+	DNSName string
+	Records DNSRecordSet
 }

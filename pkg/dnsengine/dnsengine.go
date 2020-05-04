@@ -2,7 +2,6 @@ package dnsengine
 
 import (
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
@@ -12,15 +11,14 @@ import (
 /*
 GetDNSRecords returns CNAME or A records for given domain name
 */
-func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (common.DomainRecords, error) {
+func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (common.DNSRecordSet, error) {
 	c := new(dns.Client)
 	m := new(dns.Msg)
 
 	m.SetQuestion(dns.Fqdn(domain), dns.TypeA)
 	m.RecursionDesired = true
 
-	dnsRecordsObject := common.DomainRecords{}
-	dnsRecordsObject.Records = []common.DNSRecord{}
+	dnsRecordsObject := common.DNSRecordSet{}
 
 	for _, resolver := range resolvers {
 		r, _, _ := c.Exchange(
@@ -43,17 +41,16 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 				}
 
 				if recordValue == "" {
-					log.Fatal("Unkown record type")
-					log.Fatal(record)
+					return nil, fmt.Errorf("unknown record type: %v", record)
 				}
 
 				newRecord := common.DNSRecord{Type: recordType, Value: recordValue}
-				dnsRecordsObject.Records = append(dnsRecordsObject.Records, newRecord)
+				dnsRecordsObject = append(dnsRecordsObject, newRecord)
 			}
 
 			return dnsRecordsObject, nil
 		}
 	}
 
-	return dnsRecordsObject, fmt.Errorf("Failed to resolve: %s", domain)
+	return nil, fmt.Errorf("Failed to resolve: %s", domain)
 }

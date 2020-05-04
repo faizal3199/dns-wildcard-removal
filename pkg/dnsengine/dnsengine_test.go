@@ -16,7 +16,7 @@ func TestGetDNSRecords(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    common.DomainRecords
+		want    common.DNSRecordSet
 		wantErr bool
 	}{
 		{
@@ -25,12 +25,10 @@ func TestGetDNSRecords(t *testing.T) {
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
 				domain:    "a.root-servers.net",
 			},
-			want: common.DomainRecords{
-				Records: []common.DNSRecord{
-					{
-						Type:  "A",
-						Value: "198.41.0.4",
-					},
+			want: common.DNSRecordSet{
+				{
+					Type:  "A",
+					Value: "198.41.0.4",
 				},
 			},
 			wantErr: false,
@@ -41,16 +39,14 @@ func TestGetDNSRecords(t *testing.T) {
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
 				domain:    "cname.dns-test.faizalhasanwala.me",
 			},
-			want: common.DomainRecords{
-				Records: []common.DNSRecord{
-					{
-						Type:  "CNAME",
-						Value: "a.root-servers.net.",
-					},
-					{
-						Type:  "A",
-						Value: "198.41.0.4",
-					},
+			want: common.DNSRecordSet{
+				{
+					Type:  "CNAME",
+					Value: "a.root-servers.net.",
+				},
+				{
+					Type:  "A",
+					Value: "198.41.0.4",
 				},
 			},
 			wantErr: false,
@@ -61,12 +57,10 @@ func TestGetDNSRecords(t *testing.T) {
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
 				domain:    "cname2.dns-test.faizalhasanwala.me",
 			},
-			want: common.DomainRecords{
-				Records: []common.DNSRecord{
-					{
-						Type:  "CNAME",
-						Value: "xx.root-servers.net.",
-					},
+			want: common.DNSRecordSet{
+				{
+					Type:  "CNAME",
+					Value: "xx.root-servers.net.",
 				},
 			},
 			wantErr: false,
@@ -77,9 +71,7 @@ func TestGetDNSRecords(t *testing.T) {
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
 				domain:    "nx.root-servers.net",
 			},
-			want: common.DomainRecords{
-				Records: []common.DNSRecord{},
-			},
+			want:    common.DNSRecordSet{},
 			wantErr: false,
 		},
 		{
@@ -88,13 +80,12 @@ func TestGetDNSRecords(t *testing.T) {
 				resolvers: common.DNSServers{"1.2.3.4"},
 				domain:    "nx.dns-test.faizalhasanwala.me",
 			},
-			want: common.DomainRecords{
-				Records: []common.DNSRecord{},
-			},
+			want:    nil,
 			wantErr: true,
 		},
 	}
 
+	t.Parallel()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := dnsengine.GetDNSRecords(tt.args.resolvers, tt.args.domain)
