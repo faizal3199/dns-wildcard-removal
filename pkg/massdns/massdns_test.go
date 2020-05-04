@@ -4,12 +4,17 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"reflect"
 	"testing"
 	"time"
 )
 
 func TestStartMassdnsProcess(t *testing.T) {
+	_, err := exec.LookPath("massdns")
+	if err != nil{
+		t.Skip("Skipping test. massdns binary not found")
+	}
 	t.Parallel()
 
 	expectedOutput := "cname.dns-test.faizalhasanwala.me. CNAME a.root-servers.net.\n"
