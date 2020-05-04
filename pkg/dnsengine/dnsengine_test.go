@@ -23,10 +23,11 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for A record",
 			args: args{
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
-				domain:    "a.root-servers.net",
+				domain:    "a.root-servers.net.",
 			},
 			want: common.DNSRecordSet{
 				{
+					Name: "a.root-servers.net.",
 					Type:  "A",
 					Value: "198.41.0.4",
 				},
@@ -37,14 +38,16 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for CNAME record",
 			args: args{
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
-				domain:    "cname.dns-test.faizalhasanwala.me",
+				domain:    "cname.dns-test.faizalhasanwala.me.",
 			},
 			want: common.DNSRecordSet{
 				{
+					Name: "cname.dns-test.faizalhasanwala.me.",
 					Type:  "CNAME",
 					Value: "a.root-servers.net.",
 				},
 				{
+					Name: "a.root-servers.net.",
 					Type:  "A",
 					Value: "198.41.0.4",
 				},
@@ -55,10 +58,11 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for CNAME only record",
 			args: args{
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
-				domain:    "cname2.dns-test.faizalhasanwala.me",
+				domain:    "cname2.dns-test.faizalhasanwala.me.",
 			},
 			want: common.DNSRecordSet{
 				{
+					Name: "cname2.dns-test.faizalhasanwala.me.",
 					Type:  "CNAME",
 					Value: "xx.root-servers.net.",
 				},
@@ -69,7 +73,7 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for NX domain",
 			args: args{
 				resolvers: common.DNSServers{"1.1.1.1", "8.8.8.8"},
-				domain:    "nx.root-servers.net",
+				domain:    "nx.root-servers.net.",
 			},
 			want:    common.DNSRecordSet{},
 			wantErr: false,
@@ -78,7 +82,7 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for Invalid DNS resolver",
 			args: args{
 				resolvers: common.DNSServers{"1.2.3.4"},
-				domain:    "nx.dns-test.faizalhasanwala.me",
+				domain:    "nx.dns-test.faizalhasanwala.me.",
 			},
 			want:    nil,
 			wantErr: true,

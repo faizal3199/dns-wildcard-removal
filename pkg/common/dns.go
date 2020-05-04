@@ -38,6 +38,7 @@ const (
 DNSRecord represents a complete DNS record(except TTL)
 */
 type DNSRecord struct {
+	Name string
 	Type  RecordTypeType
 	Value RecordValueType
 }

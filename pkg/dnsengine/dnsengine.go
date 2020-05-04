@@ -29,6 +29,7 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 
 		if r != nil {
 			for _, record := range r.Answer {
+				queryName := record.Header().Name
 				recordType := dns.Type(record.Header().Rrtype).String()
 				recordValue := ""
 
@@ -45,7 +46,7 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 					return nil, fmt.Errorf("unknown record type: %v", record)
 				}
 
-				newRecord := common.DNSRecord{Type: recordType, Value: recordValue}
+				newRecord := common.DNSRecord{Name: queryName, Type: recordType, Value: recordValue}
 				dnsRecordsObject = append(dnsRecordsObject, newRecord)
 			}
 
