@@ -3,6 +3,7 @@ package dnsengine
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/miekg/dns"
@@ -53,4 +54,21 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 	}
 
 	return nil, fmt.Errorf("Failed to resolve: %s", domain)
+}
+
+/*
+GetParentDomain returns parent domain upto TLD. After which it returns error
+*/
+func GetParentDomain(domain string) (string, error) {
+	domain = strings.ToLower(domain)
+	domain = strings.TrimSpace(domain)
+	domain = strings.Trim(domain, ".")
+
+	parts := strings.Split(domain, ".")
+
+	if len(parts) > 1 {
+		return strings.Join(parts[1:], "."), nil
+	}
+	// Return root & error
+	return ".", fmt.Errorf("cannot get the parent domain for '%s'", domain)
 }

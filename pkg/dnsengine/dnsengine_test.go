@@ -99,3 +99,79 @@ func TestGetDNSRecords(t *testing.T) {
 		})
 	}
 }
+
+func TestGetParentDomain(t *testing.T) {
+	t.Parallel()
+
+	type args struct {
+		domain string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "Domain name with spaces",
+			args: args{
+				domain: " xyz.a.root-servers.net ",
+			},
+			want:    "a.root-servers.net",
+			wantErr: false,
+		},
+		{
+			name: "Domain name with extra dots",
+			args: args{
+				domain: "xyz.a.root-servers.net.",
+			},
+			want:    "a.root-servers.net",
+			wantErr: false,
+		},
+		{
+			name: "Domain name with extra dots and spaces",
+			args: args{
+				domain: " xyz.a.root-servers.net. ",
+			},
+			want:    "a.root-servers.net",
+			wantErr: false,
+		},
+		{
+			name: "Level 3",
+			args: args{
+				domain: "a.root-servers.net",
+			},
+			want:    "root-servers.net",
+			wantErr: false,
+		},
+		{
+			name: "Level 2",
+			args: args{
+				domain: "root-servers.net",
+			},
+			want:    "net",
+			wantErr: false,
+		},
+		{
+			name: "Level 1",
+			args: args{
+				domain: "net",
+			},
+			want:    ".",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := dnsengine.GetParentDomain(tt.args.domain)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetParentDomain() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetParentDomain() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
