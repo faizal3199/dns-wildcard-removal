@@ -39,7 +39,7 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 			// Create new DNS Record and set the corresponding Domain
 			if currentDomainRecords == nil {
 				currentDomainRecords = new(common.DomainRecords)
-				currentDomainRecords.DNSName = parts[0]
+				currentDomainRecords.DomainName = parts[0]
 			}
 
 			currentDomainRecords.Records = append(currentDomainRecords.Records,

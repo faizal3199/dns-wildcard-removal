@@ -76,6 +76,6 @@ func (d DNSRecordSet) String() string {
 DomainRecords contains name of the domain and it's DNS records
 */
 type DomainRecords struct {
-	DNSName string
+	DomainName string
 	Records DNSRecordSet
 }

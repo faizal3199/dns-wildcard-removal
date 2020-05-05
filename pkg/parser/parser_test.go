@@ -16,7 +16,7 @@ func TestParseAndPublishDNSRecords(t *testing.T) {
 	c := make(chan common.DomainRecords)
 
 	expectedRecord := common.DomainRecords{
-		DNSName: "cname.dns-test.faizalhasanwala.me.",
+		DomainName: "cname.dns-test.faizalhasanwala.me.",
 		Records: common.DNSRecordSet{
 			{
 				Name:  "cname.dns-test.faizalhasanwala.me.",
