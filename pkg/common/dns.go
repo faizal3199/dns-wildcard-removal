@@ -1,5 +1,10 @@
 package common
 
+import (
+	"fmt"
+	"strings"
+)
+
 /*
 RecordTypeType to represent type of DNS record types
 */
@@ -38,19 +43,38 @@ const (
 DNSRecord represents a complete DNS record(except TTL)
 */
 type DNSRecord struct {
-	Name string
+	Name  string
 	Type  RecordTypeType
 	Value RecordValueType
 }
 
 /*
+String returns string format of DNS record
+*/
+func (d DNSRecord) String() string {
+	return fmt.Sprintf("%s %s %s", d.Name, d.Type, d.Value)
+}
+
+/*
 DNSRecordSet is used to contain multiple records for same domain
 */
-type DNSRecordSet = []DNSRecord
+type DNSRecordSet []DNSRecord
+
+/*
+String returns string format of DNS record
+*/
+func (d DNSRecordSet) String() string {
+	returnVal := ""
+	for i := 0; i < len(d); i++ {
+		returnVal += d[i].String() + "\n"
+	}
+
+	return strings.TrimSpace(returnVal)
+}
 
 /*
 DomainRecords contains name of the domain and it's DNS records
- */
+*/
 type DomainRecords struct {
 	DNSName string
 	Records DNSRecordSet
