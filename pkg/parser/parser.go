@@ -8,6 +8,10 @@ import (
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
+/*
+ParseAndPublishDNSRecords parsed the records from the io.PipeReader and published the records on
+the channel `c`. Function closes the channel once there is no more input(pipe closed)
+ */
 func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainRecords) {
 	scanner := bufio.NewScanner(reader)
 	var currentDomainRecords *common.DomainRecords
