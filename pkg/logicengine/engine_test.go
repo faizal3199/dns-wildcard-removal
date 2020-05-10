@@ -1,13 +1,14 @@
 package logicengine
 
 import (
-	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"testing"
+
+	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
 func Test_logicEngine_IsDomainWildCard(t *testing.T) {
 	type fields struct {
-		resolvers common.DNSServers
+		resolvers     common.DNSServers
 		jobDomainName string
 	}
 	type args struct {
@@ -34,14 +35,14 @@ func Test_logicEngine_IsDomainWildCard(t *testing.T) {
 					DomainName: "xyz.myshopify.com.",
 					Records: common.DNSRecordSet{
 						{
-							Name: "xyz.myshopify.com.",
-							Type: "CNAME",
+							Name:  "xyz.myshopify.com.",
+							Type:  "CNAME",
 							Value: "shops.myshopify.com.",
 						},
 					},
 				},
 			},
-			want: true,
+			want:    true,
 			wantErr: false,
 		},
 	}
@@ -76,15 +77,15 @@ func Test_areTwoARecordsEqual(t *testing.T) {
 			args: args{
 				x: common.DNSRecordSet{
 					{
-						Name: "x",
-						Type: "A",
+						Name:  "x",
+						Type:  "A",
 						Value: "1.1.1.1",
 					},
 				},
 				y: common.DNSRecordSet{
 					{
-						Name: "y",
-						Type: "A",
+						Name:  "y",
+						Type:  "A",
 						Value: "1.1.1.1",
 					},
 				},
@@ -96,15 +97,15 @@ func Test_areTwoARecordsEqual(t *testing.T) {
 			args: args{
 				x: common.DNSRecordSet{
 					{
-						Name: "x",
-						Type: "A",
+						Name:  "x",
+						Type:  "A",
 						Value: "1.1.1.1",
 					},
 				},
 				y: common.DNSRecordSet{
 					{
-						Name: "y",
-						Type: "A",
+						Name:  "y",
+						Type:  "A",
 						Value: "1.2.1.1",
 					},
 				},

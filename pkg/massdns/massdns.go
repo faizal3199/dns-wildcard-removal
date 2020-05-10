@@ -2,10 +2,11 @@ package massdns
 
 import (
 	"fmt"
-	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"io"
 	"os"
 	"os/exec"
+
+	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
 /*
@@ -61,7 +62,7 @@ func StartMassdnsProcess(inputFile string, resolverFile string) (*io.PipeReader,
 	}
 
 	cmd := exec.Command("massdns", "-r", resolverFile, "-t", "A", "-o", "Snl", "--flush", "-")
-	
+
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err

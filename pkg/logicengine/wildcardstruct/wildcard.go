@@ -87,7 +87,7 @@ func (d *WildcardDomain) GetResults(resolver common.DNSServers) (common.DNSRecor
 /*
 CreateWildcardDomainInstance returns newly initialized WildcardDomain instance. It changes the
 domainName for returned WildcardDomain object to a likely non-existence subdomain of provided domain.
- */
+*/
 func CreateWildcardDomainInstance(domainName string) *WildcardDomain {
 	x := new(WildcardDomain)
 	tmp := strings.Trim(domainName, ".")

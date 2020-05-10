@@ -78,7 +78,7 @@ func GetParentDomain(domain string, jobDomain string) (string, error) {
 	if len(parts) > len(jobParts) {
 		parentDomain := strings.Join(parts[1:], ".")
 		parentDomain += "."
-		return  parentDomain, nil
+		return parentDomain, nil
 	}
 	// Return root & error
 	return jobDomain, fmt.Errorf("parent domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)

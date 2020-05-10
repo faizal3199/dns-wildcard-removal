@@ -1,9 +1,10 @@
 package wildcardstruct
 
 import (
-	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"reflect"
 	"testing"
+
+	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
 func Test_wildcardDomain_GetResults(t *testing.T) {

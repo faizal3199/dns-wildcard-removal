@@ -77,5 +77,5 @@ DomainRecords contains name of the domain and it's DNS records
 */
 type DomainRecords struct {
 	DomainName string
-	Records DNSRecordSet
+	Records    DNSRecordSet
 }

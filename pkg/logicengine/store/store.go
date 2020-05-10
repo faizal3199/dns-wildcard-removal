@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/wildcardstruct"
 	"sync"
+
+	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/wildcardstruct"
 )
 
 type Store struct {
@@ -40,7 +41,7 @@ func (c *Store) GetOrCreateDomainObject(domainName string) (value *wildcardstruc
 
 /*
 CreateStoreInstance returns a newly initialized store instance.
- */
+*/
 func CreateStoreInstance() *Store {
 	x := new(Store)
 	x.cache = map[string]*wildcardstruct.WildcardDomain{}

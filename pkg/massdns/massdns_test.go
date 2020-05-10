@@ -12,7 +12,7 @@ import (
 
 func TestStartMassdnsProcess(t *testing.T) {
 	_, err := exec.LookPath("massdns")
-	if err != nil{
+	if err != nil {
 		t.Skip("Skipping test. massdns binary not found")
 	}
 	t.Parallel()

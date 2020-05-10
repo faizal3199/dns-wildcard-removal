@@ -27,7 +27,7 @@ func TestGetDNSRecords(t *testing.T) {
 			},
 			want: common.DNSRecordSet{
 				{
-					Name: "a.root-servers.net.",
+					Name:  "a.root-servers.net.",
 					Type:  "A",
 					Value: "198.41.0.4",
 				},
@@ -42,12 +42,12 @@ func TestGetDNSRecords(t *testing.T) {
 			},
 			want: common.DNSRecordSet{
 				{
-					Name: "cname.dns-test.faizalhasanwala.me.",
+					Name:  "cname.dns-test.faizalhasanwala.me.",
 					Type:  "CNAME",
 					Value: "a.root-servers.net.",
 				},
 				{
-					Name: "a.root-servers.net.",
+					Name:  "a.root-servers.net.",
 					Type:  "A",
 					Value: "198.41.0.4",
 				},
@@ -62,7 +62,7 @@ func TestGetDNSRecords(t *testing.T) {
 			},
 			want: common.DNSRecordSet{
 				{
-					Name: "cname2.dns-test.faizalhasanwala.me.",
+					Name:  "cname2.dns-test.faizalhasanwala.me.",
 					Type:  "CNAME",
 					Value: "xx.root-servers.net.",
 				},
@@ -108,7 +108,7 @@ func TestGetParentDomain(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		domain string
+		domain    string
 		jobDomain string
 	}
 	tests := []struct {
@@ -120,7 +120,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Domain name with spaces",
 			args: args{
-				domain: " xyz.a.root-servers.net ",
+				domain:    " xyz.a.root-servers.net ",
 				jobDomain: "root-server.net.",
 			},
 			want:    "a.root-servers.net.",
@@ -129,7 +129,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Domain name with extra dots",
 			args: args{
-				domain: "xyz.a.root-servers.net.",
+				domain:    "xyz.a.root-servers.net.",
 				jobDomain: "root-server.net.",
 			},
 			want:    "a.root-servers.net.",
@@ -138,7 +138,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Domain name with extra dots and spaces",
 			args: args{
-				domain: " xyz.a.root-servers.net. ",
+				domain:    " xyz.a.root-servers.net. ",
 				jobDomain: "root-server.net.",
 			},
 			want:    "a.root-servers.net.",
@@ -147,7 +147,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Level 3",
 			args: args{
-				domain: "a.root-servers.net",
+				domain:    "a.root-servers.net",
 				jobDomain: "root-server.net.",
 			},
 			want:    "root-servers.net.",
@@ -156,7 +156,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Level 2",
 			args: args{
-				domain: "root-servers.net",
+				domain:    "root-servers.net",
 				jobDomain: "root-server.net.",
 			},
 			want:    "root-server.net.",
@@ -165,7 +165,7 @@ func TestGetParentDomain(t *testing.T) {
 		{
 			name: "Level 1",
 			args: args{
-				domain: "net",
+				domain:    "net",
 				jobDomain: "root-server.net.",
 			},
 			want:    "root-server.net.",
