@@ -8,6 +8,7 @@ import (
 func Test_logicEngine_IsDomainWildCard(t *testing.T) {
 	type fields struct {
 		resolvers common.DNSServers
+		jobDomainName string
 	}
 	type args struct {
 		domainRecord common.DomainRecords
@@ -20,12 +21,13 @@ func Test_logicEngine_IsDomainWildCard(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Test wildcardstruct for xyz.myshopify.com. [CNAME]",
+			name: "Test wildcard struct for xyz.myshopify.com. [CNAME]",
 			fields: fields{
 				resolvers: common.DNSServers{
 					"1.1.1.1",
 					"8.8.8.8",
 				},
+				jobDomainName: "myshopify.com.",
 			},
 			args: args{
 				common.DomainRecords{
@@ -45,7 +47,7 @@ func Test_logicEngine_IsDomainWildCard(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := CreateLogicEngineInstance(tt.fields.resolvers)
+			l := CreateLogicEngineInstance(tt.fields.jobDomainName, tt.fields.resolvers)
 
 			got, err := l.IsDomainWildCard(tt.args.domainRecord)
 			if (err != nil) != tt.wantErr {

@@ -60,16 +60,26 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 /*
 GetParentDomain returns parent domain upto TLD. After which it returns error
 */
-func GetParentDomain(domain string) (string, error) {
+func GetParentDomain(domain string, jobDomain string) (string, error) {
 	domain = strings.ToLower(domain)
 	domain = strings.TrimSpace(domain)
 	domain = strings.Trim(domain, ".")
 
-	parts := strings.Split(domain, ".")
+	jobDomain = strings.ToLower(jobDomain)
+	jobDomain = strings.TrimSpace(jobDomain)
+	jobDomain = strings.Trim(jobDomain, ".")
 
-	if len(parts) > 1 {
-		return strings.Join(parts[1:], "."), nil
+	parts := strings.Split(domain, ".")
+	jobParts := strings.Split(jobDomain, ".")
+
+	domain += "."
+	jobDomain += "."
+
+	if len(parts) > len(jobParts) {
+		parentDomain := strings.Join(parts[1:], ".")
+		parentDomain += "."
+		return  parentDomain, nil
 	}
 	// Return root & error
-	return ".", fmt.Errorf("cannot get the parent domain for '%s'", domain)
+	return jobDomain, fmt.Errorf("parent domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)
 }

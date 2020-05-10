@@ -109,6 +109,7 @@ func TestGetParentDomain(t *testing.T) {
 
 	type args struct {
 		domain string
+		jobDomain string
 	}
 	tests := []struct {
 		name    string
@@ -120,55 +121,61 @@ func TestGetParentDomain(t *testing.T) {
 			name: "Domain name with spaces",
 			args: args{
 				domain: " xyz.a.root-servers.net ",
+				jobDomain: "root-server.net.",
 			},
-			want:    "a.root-servers.net",
+			want:    "a.root-servers.net.",
 			wantErr: false,
 		},
 		{
 			name: "Domain name with extra dots",
 			args: args{
 				domain: "xyz.a.root-servers.net.",
+				jobDomain: "root-server.net.",
 			},
-			want:    "a.root-servers.net",
+			want:    "a.root-servers.net.",
 			wantErr: false,
 		},
 		{
 			name: "Domain name with extra dots and spaces",
 			args: args{
 				domain: " xyz.a.root-servers.net. ",
+				jobDomain: "root-server.net.",
 			},
-			want:    "a.root-servers.net",
+			want:    "a.root-servers.net.",
 			wantErr: false,
 		},
 		{
 			name: "Level 3",
 			args: args{
 				domain: "a.root-servers.net",
+				jobDomain: "root-server.net.",
 			},
-			want:    "root-servers.net",
+			want:    "root-servers.net.",
 			wantErr: false,
 		},
 		{
 			name: "Level 2",
 			args: args{
 				domain: "root-servers.net",
+				jobDomain: "root-server.net.",
 			},
-			want:    "net",
-			wantErr: false,
+			want:    "root-server.net.",
+			wantErr: true,
 		},
 		{
 			name: "Level 1",
 			args: args{
 				domain: "net",
+				jobDomain: "root-server.net.",
 			},
-			want:    ".",
+			want:    "root-server.net.",
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := dnsengine.GetParentDomain(tt.args.domain)
+			got, err := dnsengine.GetParentDomain(tt.args.domain, tt.args.jobDomain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetParentDomain() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -9,6 +9,7 @@ import (
 
 type logicEngine struct {
 	resolvers common.DNSServers
+	jobDomainName string
 	store     store.Store
 }
 
@@ -20,7 +21,7 @@ func (l *logicEngine) IsDomainWildCard(domainRecord common.DomainRecords) (bool,
 	currentDomain := domainRecord.DomainName
 
 	for {
-		parentDomain, err := dnsengine.GetParentDomain(currentDomain)
+		parentDomain, err := dnsengine.GetParentDomain(currentDomain, l.jobDomainName)
 		// getParentDomain err
 		// No more parent domain
 		if err != nil {
@@ -113,9 +114,10 @@ func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain comm
 /*
 CreateLogicEngineInstance returns a newly initialized object of LogicEngine.
  */
-func CreateLogicEngineInstance(resolvers common.DNSServers) *logicEngine{
+func CreateLogicEngineInstance( domainName string, resolvers common.DNSServers) *logicEngine{
 	x := new(logicEngine)
 	x.resolvers = resolvers
+	x.jobDomainName = domainName
 	x.store = *store.CreateStoreInstance()
 	return  x
 }
