@@ -12,11 +12,12 @@ import (
 )
 
 type Options struct {
-	Domain   string
-	Input    string
-	Resolver common.DNSServers
-	Threads  int
-	Output   string
+	Domain       string
+	Input        string
+	Resolver     common.DNSServers
+	ResolverFile string
+	Threads      int
+	Output       string
 }
 
 type internalOptions struct {
@@ -68,6 +69,7 @@ func ParseOptionsArguments() (Options, error) {
 		Domain:   parsedOptions.Domain,
 		Input:    parsedOptions.Input,
 		Resolver: resolvers,
+		ResolverFile: parsedOptions.Resolver,
 		Threads:  parsedOptions.Threads,
 		Output:   parsedOptions.Output,
 	}
