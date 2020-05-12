@@ -61,3 +61,10 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 		}
 	}()
 }
+
+/*
+CreateChannel return a new channel for passing DomainRecords
+*/
+func CreateChannel() chan common.DomainRecords {
+	return make(chan common.DomainRecords)
+}
