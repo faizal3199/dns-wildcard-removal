@@ -13,6 +13,7 @@ import (
 
 type Options struct {
 	Domain   string
+	Input    string
 	Resolver common.DNSServers
 	Threads  int
 	Output   string
@@ -20,6 +21,7 @@ type Options struct {
 
 type internalOptions struct {
 	Domain   string `arg:"-d,required" help:"Domain to filter wildcard subdomains for"`
+	Input    string `arg:"-i,required" help:"Path to input file of list of subdomains. Use - for stdin"`
 	Resolver string `arg:"-r,required" help:"Path to file containing list of resolvers"`
 	Threads  int    `arg:"-t" default:"4" help:"Number of threads to run"`
 	Output   string `arg:"-o,required" help:"Path to output file. Use - for stdout"`
@@ -64,6 +66,7 @@ func ParseOptionsArguments() (Options, error) {
 
 	returnOptions := Options{
 		Domain:   parsedOptions.Domain,
+		Input:    parsedOptions.Input,
 		Resolver: resolvers,
 		Threads:  parsedOptions.Threads,
 		Output:   parsedOptions.Output,
