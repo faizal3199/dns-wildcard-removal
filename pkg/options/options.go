@@ -66,12 +66,12 @@ func ParseOptionsArguments() (Options, error) {
 	}
 
 	returnOptions := Options{
-		Domain:   parsedOptions.Domain,
-		Input:    parsedOptions.Input,
-		Resolver: resolvers,
+		Domain:       parsedOptions.Domain,
+		Input:        parsedOptions.Input,
+		Resolver:     resolvers,
 		ResolverFile: parsedOptions.Resolver,
-		Threads:  parsedOptions.Threads,
-		Output:   parsedOptions.Output,
+		Threads:      parsedOptions.Threads,
+		Output:       parsedOptions.Output,
 	}
 
 	return returnOptions, nil

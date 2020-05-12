@@ -24,7 +24,7 @@ func writeToTempFileAndLogErr(data string, t *testing.T) (inputFile *os.File, er
 	_, err = inputFile.Write([]byte(data))
 	errEncountered = err != nil
 
-	if errEncountered{
+	if errEncountered {
 		t.Errorf("StartMassdnsProcess(): Encountered error: %v", err)
 	}
 
@@ -44,13 +44,13 @@ func TestStartMassdnsProcess(t *testing.T) {
 
 	t.Run("Check output: immediate", func(t *testing.T) {
 		inputFile, errEnc := writeToTempFileAndLogErr("cname.dns-test.faizalhasanwala.me", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(inputFile.Name())
 
 		resolverFile, errEnc := writeToTempFileAndLogErr("1.1.1.1", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(resolverFile.Name())
@@ -73,13 +73,13 @@ func TestStartMassdnsProcess(t *testing.T) {
 
 	t.Run("Check output: delayed", func(t *testing.T) {
 		inputFile, errEnc := writeToTempFileAndLogErr("cname.dns-test.faizalhasanwala.me", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(inputFile.Name())
 
 		resolverFile, errEnc := writeToTempFileAndLogErr("1.1.1.1", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(resolverFile.Name())
@@ -106,13 +106,13 @@ func TestStartMassdnsProcess(t *testing.T) {
 
 	t.Run("Check output: stdin input", func(t *testing.T) {
 		inputFile, errEnc := writeToTempFileAndLogErr("cname.dns-test.faizalhasanwala.me", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(inputFile.Name())
 
 		resolverFile, errEnc := writeToTempFileAndLogErr("1.1.1.1", t)
-		if errEnc{
+		if errEnc {
 			return
 		}
 		defer os.Remove(resolverFile.Name())
