@@ -8,7 +8,7 @@ import (
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/store"
 )
 
-type logicEngine struct {
+type LogicEngine struct {
 	resolvers     common.DNSServers
 	jobDomainName string
 	store         store.Store
@@ -16,9 +16,10 @@ type logicEngine struct {
 
 /*
 IsDomainWildCard check if provided domain is wildcard. This will check upto all parent domains until
-dnsengine.GetParentDomain returns no new domain(i.e. returns with error)
+dnsengine.GetParentDomain returns no new domain(i.e. returns with error). function returns any error encountered
+by dns engine during fetching
 */
-func (l *logicEngine) IsDomainWildCard(domainRecord common.DomainRecords) (bool, error) {
+func (l *LogicEngine) IsDomainWildCard(domainRecord common.DomainRecords) (bool, error) {
 	currentDomain := domainRecord.DomainName
 
 	for {
@@ -115,8 +116,8 @@ func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain comm
 /*
 CreateLogicEngineInstance returns a newly initialized object of LogicEngine.
 */
-func CreateLogicEngineInstance(domainName string, resolvers common.DNSServers) *logicEngine {
-	x := new(logicEngine)
+func CreateLogicEngineInstance(domainName string, resolvers common.DNSServers) *LogicEngine {
+	x := new(LogicEngine)
 	x.resolvers = resolvers
 	x.jobDomainName = domainName
 	x.store = *store.CreateStoreInstance()

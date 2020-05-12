@@ -6,7 +6,7 @@ import (
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
-func Test_logicEngine_IsDomainWildCard(t *testing.T) {
+func Test_LogicEngine_IsDomainWildCard(t *testing.T) {
 	type fields struct {
 		resolvers     common.DNSServers
 		jobDomainName string
