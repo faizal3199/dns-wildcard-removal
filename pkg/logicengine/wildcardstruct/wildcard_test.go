@@ -23,9 +23,9 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Fetch records for a.root-servers.net",
+			name: "Fetch records for dns-test.faizalhasanwala.me.",
 			fields: fields{
-				DomainName: "a.root-servers.net",
+				DomainName: "dns-test.faizalhasanwala.me.",
 			},
 			args: args{
 				resolver: common.DNSServers{
@@ -35,9 +35,9 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 			},
 			want: common.DNSRecordSet{
 				{
-					Name:  "a.root-servers.net.",
+					Name:  "dns-test.faizalhasanwala.me.",
 					Type:  "A",
-					Value: "198.41.0.4",
+					Value: "127.0.0.1",
 				},
 			},
 			wantErr: false,
@@ -47,6 +47,8 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := CreateWildcardDomainInstance(tt.fields.DomainName)
+
+			tt.want[0].Name = NonExistingLabel + "." + tt.want[0].Name
 
 			got, err := d.GetResults(tt.args.resolver)
 			if (err != nil) != tt.wantErr {
