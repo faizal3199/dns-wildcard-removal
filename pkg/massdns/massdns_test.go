@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -156,6 +157,11 @@ func Test_checkIfFileIsOkay(t *testing.T) {
 	type args struct {
 		filePath string
 	}
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping in windows")
+	}
+
 	tests := []struct {
 		name string
 		args args
@@ -228,6 +234,10 @@ func Test_generateCannotOpenFileError(t *testing.T) {
 func Test_getInputFile(t *testing.T) {
 	type args struct {
 		path string
+	}
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping in windows")
 	}
 
 	tests := []struct {
