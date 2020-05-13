@@ -158,7 +158,7 @@ func Test_checkIfFileIsOkay(t *testing.T) {
 		filePath string
 	}
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		t.Skip("Skipping in windows")
 	}
 
@@ -236,7 +236,7 @@ func Test_getInputFile(t *testing.T) {
 		path string
 	}
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		t.Skip("Skipping in windows")
 	}
 
