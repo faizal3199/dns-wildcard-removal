@@ -116,7 +116,7 @@ func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain []co
 
 	// currDomain can't have zero records because massdns provides the data
 	if len(currDomain) == 0 {
-		log.Fatalf("Invalid record used for comparision: %v", currDomain)
+		log.Fatalf("Invalid record used for comparison: %v", currDomain)
 	}
 
 	currDomainSet := getSetFromRecords(currDomain)

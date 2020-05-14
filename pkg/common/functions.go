@@ -15,6 +15,13 @@ func FailOnError(err error, msg string) {
 	}
 }
 
+/*
+SanitizeDomainName performs following operation and returns result
+1) Trims whitespace
+2) Converts to lower case
+3) Removes all extra '.'
+4) Appends '.' at the end
+*/
 func SanitizeDomainName(domainName string) string {
 	lookupName := strings.TrimSpace(domainName)
 	lookupName = strings.ToLower(lookupName)

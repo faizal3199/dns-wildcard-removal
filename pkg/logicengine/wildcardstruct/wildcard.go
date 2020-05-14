@@ -24,12 +24,16 @@ type WildcardDomain struct {
 }
 
 const (
-	// Maximum length of a domain name(ignore last '.')
+	// MaxDomainNameLength : Maximum length of a domain name(ignore last '.')
 	MaxDomainNameLength = 253
-	// Maximum length of a label(doesn't include '.')
+
+	// MaxLabelLength : Maximum length of a label(doesn't include '.')
 	MaxLabelLength = 63
+
+	// ValidCharacters : Allowed characters in a label
 	// Doesn't use '-' as it can't be the first character in a label
 	ValidCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
+
 	// Number of times result will be fetched
 	numberOfTest = 10
 )
@@ -50,6 +54,11 @@ func (d *WildcardDomain) readUnlock() {
 	d.mutex.RUnlock()
 }
 
+/*
+GetRandomSubdomain generates a "valid" subdomain with random label for given domain. A valid domain name is
+1) total length <= 253
+2) any label length <= 63
+*/
 func GetRandomSubdomain(domainName string) string {
 	var maxLength int
 
