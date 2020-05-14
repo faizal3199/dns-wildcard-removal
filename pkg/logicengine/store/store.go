@@ -3,11 +3,16 @@ package store
 import (
 	"sync"
 
+	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/wildcardstruct"
 )
 
+/*
+Store caches WildcardDomain objects and exposes a thread safe function to access them
+*/
 type Store struct {
 	cache map[string]*wildcardstruct.WildcardDomain
 	mutex sync.Mutex
@@ -29,13 +34,16 @@ func (c *Store) GetOrCreateDomainObject(domainName string) (value *wildcardstruc
 	defer c.unlock()
 	c.lock()
 
-	cachedObject := c.cache[domainName]
+	// Alter domain name to match valid format
+	lookupName := common.SanitizeDomainName(domainName)
+
+	cachedObject := c.cache[lookupName]
 
 	if cachedObject == nil {
-		log.Debugf("Creating new wildcardDomain Object for %s", domainName)
-		newObject := wildcardstruct.CreateWildcardDomainInstance(domainName)
+		log.Debugf("Creating new wildcardDomain Object for %s", lookupName)
+		newObject := wildcardstruct.CreateWildcardDomainInstance(lookupName)
 
-		c.cache[domainName] = newObject
+		c.cache[lookupName] = newObject
 
 		return newObject, true
 	}

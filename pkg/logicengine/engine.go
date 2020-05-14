@@ -1,13 +1,18 @@
 package logicengine
 
 import (
-	"sort"
+	mapset "github.com/deckarep/golang-set"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/dnsengine"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/store"
 )
 
+/*
+LogicEngine exposes function to check if a domain is wildcard. All the complexities are handled
+by it.
+*/
 type LogicEngine struct {
 	resolvers     common.DNSServers
 	jobDomainName string
@@ -46,34 +51,39 @@ func (l *LogicEngine) IsDomainWildCard(domainRecord common.DomainRecords) (bool,
 	}
 }
 
-func areTwoArraysEqual(a1, a2 []string) bool {
-	sort.Strings(a1)
-	sort.Strings(a2)
-	if len(a1) == len(a2) {
-		for i, v := range a1 {
-			if v != a2[i] {
-				return false
-			}
-		}
+/*
+How is mapset created?
+1) If DNSRecordSet is of CNAME type. Then only CNAME target value is used for mapset
+2) If DNSRecordSet is of A type. Then all A values are used for mapset
+*/
+func getSetFromRecords(x common.DNSRecordSet) mapset.Set {
+	tempSet := mapset.NewSet()
+
+	if x == nil || len(x) == 0 {
+		return tempSet
+	}
+
+	// If CNAME : only use target value
+	if x[0].Type == "CNAME" {
+		tempSet.Add(x[0].Value)
 	} else {
-		return false
+		// If A : use all values
+		for _, record := range x {
+			tempSet.Add(record.Value)
+		}
 	}
-	return true
+
+	return tempSet
 }
 
-func getArrayOfARecords(x common.DNSRecordSet) []string {
-	arrX := make([]string, 0)
-	for i := 0; i < len(x); i++ {
-		arrX = append(arrX, x[i].Value)
+func getSetFromRecordsArray(x []common.DNSRecordSet) mapset.Set {
+	tempSet := mapset.NewSet()
+
+	for _, recordSet := range x {
+		tempSet = tempSet.Union(getSetFromRecords(recordSet))
 	}
-	return arrX
-}
 
-func areTwoARecordsEqual(x, y common.DNSRecordSet) bool {
-	arrX := getArrayOfARecords(x)
-	arrY := getArrayOfARecords(y)
-
-	return areTwoArraysEqual(arrX, arrY)
+	return tempSet
 }
 
 /*
@@ -83,33 +93,36 @@ Returns true if current domain matches for wildcard else false.
 
 Following is the logic for wildcard match:
 
-CNAME: if both are CNAME and there target matches.
+The function creates a mapset of records for currDomain(regardless of CNAME or A type). The function then checks
+if the newly created mapset is subset of parentDomain's mapset.
 
-A: if both records starts with A records and has same IPs(unordered/ordered).
-
-All other cases result in no wildcard deduction including parentDomain being NX domain(empty record set)
+How is mapset created?
+1) If DNSRecordSet is of CNAME type. Then only CNAME target value is used for mapset
+2) If DNSRecordSet is of A type. Then all A values are used for mapset
 */
-func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain common.DNSRecordSet) bool {
-	// NX Domain
-	if len(parentDomain) == 0 {
+func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain []common.DNSRecordSet) bool {
+	// NX Domain parentDomain
+	areAllRecordsNX := true
+	for _, recordSet := range parentDomain {
+		if recordSet != nil && len(recordSet) != 0 {
+			areAllRecordsNX = false
+			break
+		}
+	}
+
+	if areAllRecordsNX {
 		return false
 	}
 
-	// currDomain can't be NX domain because massdns provides the data
-
-	// Ensure both are of same type
-	if currDomain[0].Type != parentDomain[0].Type {
-		return false
+	// currDomain can't have zero records because massdns provides the data
+	if len(currDomain) == 0 {
+		log.Fatalf("Invalid record used for comparision: %v", currDomain)
 	}
 
-	if currDomain[0].Type == "A" {
-		return areTwoARecordsEqual(currDomain, parentDomain)
-	} else if currDomain[0].Type == "CNAME" {
-		// Only compare CNAME targets
-		return currDomain[0].Value == parentDomain[0].Value
-	} else {
-		return false
-	}
+	currDomainSet := getSetFromRecords(currDomain)
+	parentDomainSet := getSetFromRecordsArray(parentDomain)
+
+	return currDomainSet.IsSubset(parentDomainSet)
 }
 
 /*

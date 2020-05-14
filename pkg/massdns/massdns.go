@@ -42,13 +42,14 @@ if valid returns pointer to os.File object for that file
 func getInputFile(path string) (*os.File, error) {
 	if path == "-" {
 		return os.Stdin, nil
-	} else {
-		if checkIfFileIsOkay(path) {
-			fileObj, err := os.Open(path)
-			return fileObj, err
-		}
-		return nil, generateCannotOpenFileError(path)
 	}
+
+	if checkIfFileIsOkay(path) {
+		fileObj, err := os.Open(path)
+		return fileObj, err
+	}
+	return nil, generateCannotOpenFileError(path)
+
 }
 
 /*

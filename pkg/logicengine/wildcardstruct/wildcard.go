@@ -1,7 +1,8 @@
 package wildcardstruct
 
 import (
-	"strings"
+	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -11,16 +12,26 @@ import (
 	"github.com/faizal3199/dns-wildcard-removal/pkg/dnsengine"
 )
 
+/*
+WildcardDomain fetches and caches the result for random subdomains of a single parent domain
+*/
 type WildcardDomain struct {
 	domainName  string
 	mutex       sync.RWMutex
-	result      common.DNSRecordSet
+	result      []common.DNSRecordSet
 	resolverErr error
 	fetched     bool
 }
 
 const (
-	NonExistingLabel = "n0n-exist3nc3-l4b3l-bip-b0p-bip-b0p-1-0-1-1-0-1"
+	// Maximum length of a domain name(ignore last '.')
+	MaxDomainNameLength = 253
+	// Maximum length of a label(doesn't include '.')
+	MaxLabelLength = 63
+	// Doesn't use '-' as it can't be the first character in a label
+	ValidCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
+	// Number of times result will be fetched
+	numberOfTest = 10
 )
 
 func (d *WildcardDomain) lock() {
@@ -39,6 +50,23 @@ func (d *WildcardDomain) readUnlock() {
 	d.mutex.RUnlock()
 }
 
+func GetRandomSubdomain(domainName string) string {
+	var maxLength int
+
+	if (MaxDomainNameLength - len(domainName)) > MaxLabelLength {
+		maxLength = MaxLabelLength
+	} else {
+		maxLength = MaxDomainNameLength - len(domainName)
+	}
+
+	newSubdomain := ""
+	for i := 0; i < maxLength; i++ {
+		newSubdomain += string(ValidCharacters[rand.Intn(len(ValidCharacters))])
+	}
+
+	return newSubdomain + "." + domainName
+}
+
 /*
 fetchDNSRecordsInBackground acquires acquire write lock and then fetches DNS records in background.
 Lock is released when record are fetched. Returns any error occurred before fetching records
@@ -53,18 +81,38 @@ func (d *WildcardDomain) fetchDNSRecordsInBackground(resolvers common.DNSServers
 
 	func() {
 		defer d.unlock()
-		res, err := dnsengine.GetDNSRecords(resolvers, d.domainName)
-		d.fetched = true
-		d.resolverErr = err
 
-		log.Debugf("Got DNS records for %s, err = %v", d.domainName, err)
-		log.Debugln(res)
+		i := numberOfTest - 1
+		maxTests := numberOfTest * 2
 
-		if err == nil {
-			d.result = res
-		} else {
-			d.result = nil
+		numberOfResolvers := len(resolvers)
+		// Use this randomized order to access resolvers from the list
+		randomOrder := rand.Perm(numberOfResolvers)
+		resolverIndex := 0
+
+		for i >= 0 && maxTests >= 0 {
+			// We may end up using only a subset of resolvers : So randomize
+			// If in case we have more tests : Try to use all
+			resolver := resolvers[randomOrder[resolverIndex]]
+			resolverIndex = (resolverIndex + 1) % numberOfResolvers
+
+			// Using random subdomains will also help avoid caching done by resolver
+			res, err := dnsengine.GetDNSRecords(common.DNSServers{resolver}, GetRandomSubdomain(d.domainName))
+
+			log.Debugf("Got DNS records for %s\nerr = %v\nres = %v", d.domainName, err, res)
+
+			if err == nil {
+				d.result = append(d.result, res)
+				i-- // Keep resolving until we get all the successful instances
+			} else {
+				d.resolverErr = fmt.Errorf("error resolving: %s", d.domainName)
+			}
+
+			// Avoid getting into infinite loop
+			maxTests--
 		}
+
+		d.fetched = true
 	}()
 }
 
@@ -73,20 +121,20 @@ GetResults checks if records are already fetched if so return else call fetchDNS
 to fetch records and then recursively call GetResults. GetResults acquires read lock before checking
 in cache
 */
-func (d *WildcardDomain) GetResults(resolver common.DNSServers) (common.DNSRecordSet, error) {
+func (d *WildcardDomain) GetResults(resolver common.DNSServers) ([]common.DNSRecordSet, error) {
 	d.readLock()
 
 	if d.fetched {
 		defer d.readUnlock()
 		return d.result, d.resolverErr
-	} else {
-		d.readUnlock()
-		d.fetchDNSRecordsInBackground(resolver)
-
-		// Allow the fetchDNSRecordsInBackground goroutine to start
-		time.Sleep(time.Second)
-		return d.GetResults(resolver)
 	}
+
+	d.readUnlock()
+	d.fetchDNSRecordsInBackground(resolver)
+
+	// Allow the fetchDNSRecordsInBackground goroutine to start
+	time.Sleep(time.Second)
+	return d.GetResults(resolver)
 }
 
 /*
@@ -95,8 +143,7 @@ domainName for returned WildcardDomain object to a likely non-existence subdomai
 */
 func CreateWildcardDomainInstance(domainName string) *WildcardDomain {
 	x := new(WildcardDomain)
-	tmp := strings.Trim(domainName, ".")
-	tmp = NonExistingLabel + "." + tmp + "."
-	x.domainName = tmp
+	x.domainName = common.SanitizeDomainName(domainName)
+	x.result = make([]common.DNSRecordSet, 0)
 	return x
 }

@@ -11,6 +11,9 @@ import (
 	"github.com/alexflint/go-arg"
 )
 
+/*
+Options to parsed from command arguments
+*/
 type Options struct {
 	Domain       string
 	Input        string
@@ -66,7 +69,7 @@ func ParseOptionsArguments() (Options, error) {
 	}
 
 	returnOptions := Options{
-		Domain:       parsedOptions.Domain,
+		Domain:       common.SanitizeDomainName(parsedOptions.Domain),
 		Input:        parsedOptions.Input,
 		Resolver:     resolvers,
 		ResolverFile: parsedOptions.Resolver,

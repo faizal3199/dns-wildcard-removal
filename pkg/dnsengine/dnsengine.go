@@ -29,7 +29,7 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 
 		if r != nil {
 			for _, record := range r.Answer {
-				queryName := record.Header().Name
+				queryName := common.SanitizeDomainName(record.Header().Name)
 				recordType := dns.Type(record.Header().Rrtype).String()
 				recordValue := ""
 
@@ -37,7 +37,7 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 				case *dns.A:
 					recordValue = v.A.String()
 				case *dns.CNAME:
-					recordValue = v.Target
+					recordValue = common.SanitizeDomainName(v.Target)
 				case *dns.NS:
 					recordValue = v.Ns
 				}
@@ -54,20 +54,15 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 		}
 	}
 
-	return nil, fmt.Errorf("Failed to resolve: %s", domain)
+	return nil, fmt.Errorf("failed to resolve: %s", domain)
 }
 
 /*
 GetParentDomain returns parent domain upto TLD. After which it returns error
 */
 func GetParentDomain(domain string, jobDomain string) (string, error) {
-	domain = strings.ToLower(domain)
-	domain = strings.TrimSpace(domain)
-	domain = strings.Trim(domain, ".")
-
-	jobDomain = strings.ToLower(jobDomain)
-	jobDomain = strings.TrimSpace(jobDomain)
-	jobDomain = strings.Trim(jobDomain, ".")
+	domain = strings.Trim(common.SanitizeDomainName(domain), ".")
+	jobDomain = strings.Trim(common.SanitizeDomainName(jobDomain), ".")
 
 	parts := strings.Split(domain, ".")
 	jobParts := strings.Split(jobDomain, ".")

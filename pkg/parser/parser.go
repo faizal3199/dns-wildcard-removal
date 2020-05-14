@@ -43,16 +43,27 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 			// Create new DNS Record and set the corresponding Domain
 			if currentDomainRecords == nil {
 				currentDomainRecords = new(common.DomainRecords)
-				currentDomainRecords.DomainName = parts[0]
+				currentDomainRecords.DomainName = common.SanitizeDomainName(parts[0])
 			}
 
-			currentDomainRecords.Records = append(currentDomainRecords.Records,
-				common.DNSRecord{
-					Name:  parts[0],
+			var newRecord common.DNSRecord
+
+			if parts[1] == "CNAME" {
+				newRecord = common.DNSRecord{
+					Name: common.SanitizeDomainName(parts[0]),
+					Type: parts[1],
+					// sanitize the value if it's a CNAME
+					Value: common.SanitizeDomainName(parts[2]),
+				}
+			} else {
+				newRecord = common.DNSRecord{
+					Name:  common.SanitizeDomainName(parts[0]),
 					Type:  parts[1],
 					Value: parts[2],
-				},
-			)
+				}
+			}
+
+			currentDomainRecords.Records = append(currentDomainRecords.Records, newRecord)
 		}
 
 		if currentDomainRecords != nil {

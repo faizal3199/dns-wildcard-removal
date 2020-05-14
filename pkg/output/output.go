@@ -1,16 +1,17 @@
 package output
 
 import (
-	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"os"
+
+	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
 func getOutputFile(path string) (*os.File, error) {
 	if path == "-" {
 		return os.Stdout, nil
-	} else {
-		return os.Create(path)
 	}
+
+	return os.Create(path)
 }
 
 /*

@@ -45,6 +45,30 @@ func Test_LogicEngine_IsDomainWildCard(t *testing.T) {
 			want:    true,
 			wantErr: false,
 		},
+		{
+			name: "Test wildcard struct for a.root-servers.net. [A]",
+			fields: fields{
+				resolvers: common.DNSServers{
+					"1.1.1.1",
+					"8.8.8.8",
+				},
+				jobDomainName: "root-servers.net.",
+			},
+			args: args{
+				common.DomainRecords{
+					DomainName: "a.root-servers.net.",
+					Records: common.DNSRecordSet{
+						{
+							Name:  "a.root-servers.net.",
+							Type:  "A",
+							Value: "198.41.0.4",
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -62,196 +86,184 @@ func Test_LogicEngine_IsDomainWildCard(t *testing.T) {
 	}
 }
 
-func Test_areTwoARecordsEqual(t *testing.T) {
-	type args struct {
-		x common.DNSRecordSet
-		y common.DNSRecordSet
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{
-			name: "Simple test for A records",
-			args: args{
-				x: common.DNSRecordSet{
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "1.1.1.1",
-					},
-				},
-				y: common.DNSRecordSet{
-					{
-						Name:  "y",
-						Type:  "A",
-						Value: "1.1.1.1",
-					},
-				},
-			},
-			want: true,
-		},
-		{
-			name: "Simple fail test for A records",
-			args: args{
-				x: common.DNSRecordSet{
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "1.1.1.1",
-					},
-				},
-				y: common.DNSRecordSet{
-					{
-						Name:  "y",
-						Type:  "A",
-						Value: "1.2.1.1",
-					},
-				},
-			},
-			want: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := areTwoARecordsEqual(tt.args.x, tt.args.y); got != tt.want {
-				t.Errorf("areTwoARecordsEqual() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_compareRecordsForWildCard(t *testing.T) {
 	type args struct {
 		currDomain   common.DNSRecordSet
-		parentDomain common.DNSRecordSet
+		parentDomain []common.DNSRecordSet
 	}
+	commonParentRecord := []common.DNSRecordSet{
+		{
+			{
+				Name:  "cname-with-a",
+				Type:  "CNAME",
+				Value: "a.b.c.d.",
+			},
+			{
+				Name:  "x.y.z.",
+				Type:  "A",
+				Value: "1.2.3.4",
+			},
+		},
+		{
+			{
+				Name:  "cname-without-a",
+				Type:  "CNAME",
+				Value: "a.b.c.e.",
+			},
+		},
+		{
+			{
+				Name:  "only-A",
+				Type:  "A",
+				Value: "1.2.3.4",
+			},
+			{
+				Name:  "only-A",
+				Type:  "A",
+				Value: "1.2.3.5",
+			},
+		},
+		{
+			{
+				Name:  "only-A-2",
+				Type:  "A",
+				Value: "2.2.3.4",
+			},
+			{
+				Name:  "only-A-2",
+				Type:  "A",
+				Value: "2.2.3.5",
+			},
+		},
+	}
+
 	tests := []struct {
 		name string
 		args args
 		want bool
 	}{
 		{
-			name: "Same CNAME target",
+			name: "CNAME with no A",
 			args: args{
 				currDomain: common.DNSRecordSet{
 					{
 						Name:  "x",
 						Type:  "CNAME",
-						Value: "x.y.z.",
+						Value: "a.b.c.d.",
 					},
 				},
-				parentDomain: common.DNSRecordSet{
-					{
-						Name:  "y",
-						Type:  "CNAME",
-						Value: "x.y.z.",
-					},
-				},
+				parentDomain: commonParentRecord,
 			},
 			want: true,
 		},
 		{
-			name: "Different CNAME target",
+			name: "CNAME with valid A",
 			args: args{
 				currDomain: common.DNSRecordSet{
 					{
 						Name:  "x",
 						Type:  "CNAME",
-						Value: "x.y.z.",
+						Value: "a.b.c.d.",
 					},
-				},
-				parentDomain: common.DNSRecordSet{
 					{
-						Name:  "y",
-						Type:  "CNAME",
-						Value: "a.y.z.",
+						Name:  "x",
+						Type:  "A",
+						Value: "1.2.3.4",
 					},
 				},
+				parentDomain: commonParentRecord,
+			},
+			want: true,
+		},
+		{
+			name: "CNAME with invalid A",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "x",
+						Type:  "CNAME",
+						Value: "a.b.c.d.",
+					},
+					{
+						Name:  "x",
+						Type:  "A",
+						Value: "0.0.0.0",
+					},
+				},
+				parentDomain: commonParentRecord,
+			},
+			want: true,
+		},
+		{
+			name: "Different CNAME",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "invalid",
+						Type:  "CNAME",
+						Value: "invalid.com",
+					},
+				},
+				parentDomain: commonParentRecord,
 			},
 			want: false,
 		},
 		{
-			name: "Same CNAME with A records",
+			name: "A records from same group",
 			args: args{
 				currDomain: common.DNSRecordSet{
 					{
 						Name:  "x",
-						Type:  "CNAME",
-						Value: "x.y.z.",
+						Type:  "A",
+						Value: "1.2.3.4",
 					},
 					{
 						Name:  "x",
 						Type:  "A",
-						Value: "0.0.0.0",
+						Value: "1.2.3.5",
 					},
 				},
-				parentDomain: common.DNSRecordSet{
-					{
-						Name:  "y",
-						Type:  "CNAME",
-						Value: "x.y.z.",
-					},
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "9.9.9.9",
-					},
-				},
+				parentDomain: commonParentRecord,
 			},
 			want: true,
 		},
 		{
-			name: "Different A records",
+			name: "A records from different group",
 			args: args{
 				currDomain: common.DNSRecordSet{
 					{
 						Name:  "x",
 						Type:  "A",
-						Value: "0.0.0.0",
+						Value: "1.2.3.4",
 					},
-				},
-				parentDomain: common.DNSRecordSet{
 					{
 						Name:  "x",
 						Type:  "A",
-						Value: "1.2.3.4.",
+						Value: "2.2.3.5",
 					},
 				},
+				parentDomain: commonParentRecord,
+			},
+			want: true,
+		},
+		{
+			name: "different A record",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "x",
+						Type:  "A",
+						Value: "1.2.3.4",
+					},
+					{
+						Name:  "x",
+						Type:  "A",
+						Value: "3.2.3.5",
+					},
+				},
+				parentDomain: commonParentRecord,
 			},
 			want: false,
-		},
-		{
-			name: "Same scrambled A records",
-			args: args{
-				currDomain: common.DNSRecordSet{
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "0.0.0.0",
-					},
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "1.2.3.4.",
-					},
-				},
-				parentDomain: common.DNSRecordSet{
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "1.2.3.4.",
-					},
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "0.0.0.0",
-					},
-				},
-			},
-			want: true,
 		},
 		{
 			name: "NX Parent domain",
@@ -262,17 +274,36 @@ func Test_compareRecordsForWildCard(t *testing.T) {
 						Type:  "A",
 						Value: "0.0.0.0",
 					},
-					{
-						Name:  "x",
-						Type:  "A",
-						Value: "1.2.3.4.",
-					},
 				},
-				parentDomain: common.DNSRecordSet{},
+				parentDomain: []common.DNSRecordSet{},
 			},
 			want: false,
 		},
+		{
+			name: "single group NX with matching CNAME",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "x",
+						Type:  "CNAME",
+						Value: "a.b.c.d.",
+					},
+				},
+				parentDomain: []common.DNSRecordSet{
+					{
+						{
+							Name:  "rand0m",
+							Type:  "CNAME",
+							Value: "a.b.c.d.",
+						},
+					},
+					{},
+				},
+			},
+			want: true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := compareRecordsForWildCard(tt.args.currDomain, tt.args.parentDomain); got != tt.want {

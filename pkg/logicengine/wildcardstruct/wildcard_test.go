@@ -15,12 +15,14 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 		resolver common.DNSServers
 	}
 
+	t.Parallel()
+
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    common.DNSRecordSet
-		wantErr bool
+		name     string
+		fields   fields
+		args     args
+		wantBase common.DNSRecordSet
+		wantErr  bool
 	}{
 		{
 			name: "Fetch records for dns-test.faizalhasanwala.me.",
@@ -33,7 +35,7 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 					"8.8.8.8",
 				},
 			},
-			want: common.DNSRecordSet{
+			wantBase: common.DNSRecordSet{
 				{
 					Name:  "dns-test.faizalhasanwala.me.",
 					Type:  "A",
@@ -48,15 +50,30 @@ func Test_wildcardDomain_GetResults(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			d := CreateWildcardDomainInstance(tt.fields.DomainName)
 
-			tt.want[0].Name = NonExistingLabel + "." + tt.want[0].Name
-
 			got, err := d.GetResults(tt.args.resolver)
+
+			// Modify to match random domain name
+			want := make([]common.DNSRecordSet, 0)
+			for _, records := range got {
+				copyOfWantBase := make([]common.DNSRecord, len(tt.wantBase))
+				// Copy to avoid all records pointing to same base
+				copy(copyOfWantBase, tt.wantBase)
+
+				copyOfWantBase[0].Name = records[0].Name
+				want = append(want, copyOfWantBase)
+			}
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetResults() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetResults() got = %v, want %v", got, tt.want)
+
+			if len(got) != numberOfTest {
+				t.Errorf("GetResults() len(got) = %d, len(want) %d", len(got), numberOfTest)
+			}
+
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("GetResults() got = %v, want %v", got, want)
 			}
 		})
 	}
