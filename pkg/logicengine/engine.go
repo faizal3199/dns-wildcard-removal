@@ -95,17 +95,16 @@ func compareRecordsForWildCard(currDomain common.DNSRecordSet, parentDomain comm
 		return false
 	}
 
-	if currDomain[0].Type == "A" {
-		if parentDomain[0].Type != "A" {
-			return false
-		}
+	// currDomain can't be NX domain because massdns provides the data
 
+	// Ensure both are of same type
+	if currDomain[0].Type != parentDomain[0].Type {
+		return false
+	}
+
+	if currDomain[0].Type == "A" {
 		return areTwoARecordsEqual(currDomain, parentDomain)
 	} else if currDomain[0].Type == "CNAME" {
-		if parentDomain[0].Type != "CNAME" {
-			return false
-		}
-
 		// Only compare CNAME targets
 		return currDomain[0].Value == parentDomain[0].Value
 	} else {

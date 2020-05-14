@@ -1,6 +1,8 @@
 package common
 
-import "log"
+import (
+	log "github.com/sirupsen/logrus"
+)
 
 func FailOnError(err error, msg string) {
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/dnsengine"
 )
@@ -54,6 +56,9 @@ func (d *WildcardDomain) fetchDNSRecordsInBackground(resolvers common.DNSServers
 		res, err := dnsengine.GetDNSRecords(resolvers, d.domainName)
 		d.fetched = true
 		d.resolverErr = err
+
+		log.Debugf("Got DNS records for %s, err = %v", d.domainName, err)
+		log.Debugln(res)
 
 		if err == nil {
 			d.result = res

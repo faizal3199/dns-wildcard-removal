@@ -3,6 +3,8 @@ package store
 import (
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine/wildcardstruct"
 )
 
@@ -30,12 +32,14 @@ func (c *Store) GetOrCreateDomainObject(domainName string) (value *wildcardstruc
 	cachedObject := c.cache[domainName]
 
 	if cachedObject == nil {
+		log.Debugf("Creating new wildcardDomain Object for %s", domainName)
 		newObject := wildcardstruct.CreateWildcardDomainInstance(domainName)
 
 		c.cache[domainName] = newObject
 
 		return newObject, true
 	}
+
 	return cachedObject, false
 }
 

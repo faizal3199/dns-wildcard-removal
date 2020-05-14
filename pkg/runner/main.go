@@ -3,6 +3,8 @@ package runner
 import (
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/massdns"
@@ -20,7 +22,6 @@ func worker(l *logicengine.LogicEngine,
 	outputChan chan<- common.DomainRecords,
 	wg *sync.WaitGroup,
 ) {
-	wg.Add(1)
 	defer wg.Done()
 
 	for {
@@ -31,7 +32,7 @@ func worker(l *logicengine.LogicEngine,
 		}
 
 		isWildCard, err := l.IsDomainWildCard(data)
-		common.FailOnError(err, "Error occurred during resolving a domain")
+		log.Warningf("Error occurred during resolving a domain: %v", err)
 
 		if !isWildCard {
 			outputChan <- data
@@ -44,6 +45,8 @@ Start is the heart of the application. It initializes all the required component
 make each component work in sync.
 */
 func Start() {
+	log.SetLevel(log.WarnLevel)
+
 	args, err := options.ParseOptionsArguments()
 	common.FailOnError(err, "Error while parsing options and related files")
 
@@ -63,7 +66,9 @@ func Start() {
 	// Start parser in background
 	parser.ParseAndPublishDNSRecords(massdnsOutputPipe, parserChannel)
 
+	log.Debugf("Initializing %d workers", args.Threads)
 	for i := 0; i < args.Threads; i++ {
+		wg.Add(1)
 		go worker(logicEngine, parserChannel, outputChannel, &wg)
 	}
 
@@ -71,6 +76,7 @@ func Start() {
 	// processing being done by any thread can be completed
 	go func() {
 		wg.Wait()
+		log.Debug("Closing output channel")
 		close(outputChannel)
 	}()
 
