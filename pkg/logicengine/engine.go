@@ -20,35 +20,31 @@ type LogicEngine struct {
 }
 
 /*
-IsDomainWildCard check if provided domain is wildcard. This will check upto all parent domains until
-dnsengine.GetParentDomain returns no new domain(i.e. returns with error). function returns any error encountered
-by dns engine during fetching
+IsDomainWildCard checks if the provided domain is a wildcard. It will check all parent domains,
+which dnsengine.GetParentDomain returns, starting from smallest domain.The function returns
+the error, if any, encountered by dnsengine.GetParentDomain.
 */
 func (l *LogicEngine) IsDomainWildCard(domainRecord common.DomainRecords) (bool, error) {
-	currentDomain := domainRecord.DomainName
+	parentDomainList, err := dnsengine.GetParentDomain(domainRecord.DomainName, l.jobDomainName)
 
-	for {
-		parentDomain, err := dnsengine.GetParentDomain(currentDomain, l.jobDomainName)
-		// getParentDomain err
-		// No more parent domain
-		if err != nil {
-			return false, nil
-		}
+	if err != nil {
+		return false, err
+	}
 
+	// Start the check from topmost domain. This will avoid any random domains in between
+	for _, parentDomain := range parentDomainList {
 		parentDomainObject, _ := l.store.GetOrCreateDomainObject(parentDomain)
-		parentDomainRecords, err := parentDomainObject.GetResults(l.resolvers)
-		// getResults err
-		// some error occurred during fetching results
-		if err != nil {
-			return false, err
-		}
+
+		// Ignore the error here. We don't want any single error from bunch of iterations to
+		// lead to domain being marked as not-a-wildcard
+		parentDomainRecords, _ := parentDomainObject.GetResults(l.resolvers)
 
 		if compareRecordsForWildCard(domainRecord.Records, parentDomainRecords) {
 			return true, nil
 		}
-
-		currentDomain = parentDomain
 	}
+
+	return false, nil
 }
 
 /*

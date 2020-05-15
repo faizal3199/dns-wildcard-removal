@@ -69,16 +69,42 @@ func Test_LogicEngine_IsDomainWildCard(t *testing.T) {
 			want:    false,
 			wantErr: false,
 		},
+		{
+			name: "Validate against error",
+			fields: fields{
+				resolvers: common.DNSServers{
+					"1.1.1.1",
+					"8.8.8.8",
+				},
+				jobDomainName: "a.b.root-servers.net.",
+			},
+			args: args{
+				common.DomainRecords{
+					DomainName: "a.root-servers.net.",
+					Records: common.DNSRecordSet{
+						{
+							Name:  "a.root-servers.net.",
+							Type:  "A",
+							Value: "198.41.0.4",
+						},
+					},
+				},
+			},
+			want:    false,
+			wantErr: true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := CreateLogicEngineInstance(tt.fields.jobDomainName, tt.fields.resolvers)
 
 			got, err := l.IsDomainWildCard(tt.args.domainRecord)
+
 			if (err != nil) != tt.wantErr {
 				t.Errorf("IsDomainWildCard() error = %v, wantErr %v", err, tt.wantErr)
-				return
 			}
+
 			if got != tt.want {
 				t.Errorf("IsDomainWildCard() got = %v, want %v", got, tt.want)
 			}
@@ -301,6 +327,34 @@ func Test_compareRecordsForWildCard(t *testing.T) {
 				},
 			},
 			want: true,
+		},
+		{
+			name: "validate erroneous behaviour: parentDomain = nil",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "x",
+						Type:  "CNAME",
+						Value: "a.b.c.d.",
+					},
+				},
+				parentDomain: nil,
+			},
+			want: false,
+		},
+		{
+			name: "validate erroneous behaviour: parentDomain = empty array",
+			args: args{
+				currDomain: common.DNSRecordSet{
+					{
+						Name:  "x",
+						Type:  "CNAME",
+						Value: "a.b.c.d.",
+					},
+				},
+				parentDomain: []common.DNSRecordSet{},
+			},
+			want: false,
 		},
 	}
 

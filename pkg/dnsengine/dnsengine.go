@@ -58,9 +58,10 @@ func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (commo
 }
 
 /*
-GetParentDomain returns parent domain upto TLD. After which it returns error
+GetParentDomain returns list of all parent domains for 'domain' upto 'jobDomain'. If 'domain' is
+out of scope for 'jobDomain' it return error.
 */
-func GetParentDomain(domain string, jobDomain string) (string, error) {
+func GetParentDomain(domain string, jobDomain string) ([]string, error) {
 	domain = strings.Trim(common.SanitizeDomainName(domain), ".")
 	jobDomain = strings.Trim(common.SanitizeDomainName(jobDomain), ".")
 
@@ -70,11 +71,21 @@ func GetParentDomain(domain string, jobDomain string) (string, error) {
 	domain += "."
 	jobDomain += "."
 
-	if len(parts) > len(jobParts) {
-		parentDomain := strings.Join(parts[1:], ".")
-		parentDomain += "."
-		return parentDomain, nil
+	if len(parts) < len(jobParts) {
+		return nil, fmt.Errorf("domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)
+	} else if len(parts) == len(jobParts) {
+		return []string{jobDomain}, nil
+	} else {
+		listTillTop := make([]string, 0)
+
+		// Ignore the deepest label. We need it's parents
+		parts := parts[1:]
+
+		for i := len(parts) - len(jobParts); i >= 0; i-- {
+			tmp := strings.Join(parts[i:], ".") + "."
+			listTillTop = append(listTillTop, tmp)
+		}
+
+		return listTillTop, nil
 	}
-	// Return root & error
-	return jobDomain, fmt.Errorf("parent domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)
 }

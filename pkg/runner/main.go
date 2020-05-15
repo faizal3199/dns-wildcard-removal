@@ -32,7 +32,12 @@ func worker(l *logicengine.LogicEngine,
 		}
 
 		isWildCard, err := l.IsDomainWildCard(data)
-		log.Warningf("Error occurred during resolving a domain: %v", err)
+
+		if err != nil {
+			log.Warningf("Error occurred while fetching wildcard status: %v", err)
+			// don't save such domains to output
+			continue
+		}
 
 		if !isWildCard {
 			outputChan <- data

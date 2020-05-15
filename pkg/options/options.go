@@ -2,6 +2,7 @@ package options
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -27,7 +28,7 @@ type internalOptions struct {
 	Domain   string `arg:"-d,required" help:"Domain to filter wildcard subdomains for"`
 	Input    string `arg:"-i,required" help:"Path to input file of list of subdomains. Use - for stdin"`
 	Resolver string `arg:"-r,required" help:"Path to file containing list of resolvers"`
-	Threads  int    `arg:"-t" default:"4" help:"Number of threads to run"`
+	Threads  int    `arg:"-t" default:"6" help:"Number of threads to run"`
 	Output   string `arg:"-o,required" help:"Path to output file. Use - for stdout"`
 }
 
@@ -37,6 +38,8 @@ func parseListOfResolversFromList(filePath string) (common.DNSServers, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer filePtr.Close()
 
 	returnValue := make(common.DNSServers, 0)
 
@@ -66,6 +69,10 @@ func ParseOptionsArguments() (Options, error) {
 	resolvers, err := parseListOfResolversFromList(parsedOptions.Resolver)
 	if err != nil {
 		return Options{}, err
+	}
+
+	if len(resolvers) == 0 {
+		return Options{}, fmt.Errorf("non valid resolver(DNS Server) found")
 	}
 
 	returnOptions := Options{

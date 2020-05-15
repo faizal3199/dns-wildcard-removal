@@ -114,7 +114,7 @@ func TestGetParentDomain(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    string
+		want    []string
 		wantErr bool
 	}{
 		{
@@ -123,52 +123,61 @@ func TestGetParentDomain(t *testing.T) {
 				domain:    " xyz.a.root-servers.net ",
 				jobDomain: "root-server.net.",
 			},
-			want:    "a.root-servers.net.",
+			want:    []string{"root-servers.net.", "a.root-servers.net."},
 			wantErr: false,
 		},
 		{
 			name: "Domain name with extra dots",
 			args: args{
 				domain:    "xyz.a.root-servers.net.",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
-			want:    "a.root-servers.net.",
+			want:    []string{"root-servers.net.", "a.root-servers.net."},
 			wantErr: false,
 		},
 		{
 			name: "Domain name with extra dots and spaces",
 			args: args{
 				domain:    " xyz.a.root-servers.net. ",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
-			want:    "a.root-servers.net.",
+			want:    []string{"root-servers.net.", "a.root-servers.net."},
 			wantErr: false,
 		},
 		{
 			name: "Level 3",
 			args: args{
 				domain:    "a.root-servers.net",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
-			want:    "root-servers.net.",
+			want:    []string{"root-servers.net."},
 			wantErr: false,
 		},
 		{
 			name: "Level 2",
 			args: args{
 				domain:    "root-servers.net",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
-			want:    "root-server.net.",
-			wantErr: true,
+			want:    []string{"root-servers.net."},
+			wantErr: false,
 		},
 		{
-			name: "Level 1",
+			name: "Level 5",
+			args: args{
+				domain:    "1.2.3.root-servers.net",
+				jobDomain: "root-servers.net.",
+			},
+			want:    []string{"root-servers.net.", "3.root-servers.net.", "2.3.root-servers.net."},
+			wantErr: false,
+		},
+		{
+			name: "Validate against error",
 			args: args{
 				domain:    "net",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
-			want:    "root-server.net.",
+			want:    nil,
 			wantErr: true,
 		},
 	}

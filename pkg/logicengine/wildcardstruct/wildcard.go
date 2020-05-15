@@ -114,6 +114,7 @@ func (d *WildcardDomain) fetchDNSRecordsInBackground(resolvers common.DNSServers
 				d.result = append(d.result, res)
 				i-- // Keep resolving until we get all the successful instances
 			} else {
+				log.Infof("Got error while resolving for '%s'\nErr: %v", d.domainName, err)
 				d.resolverErr = fmt.Errorf("error resolving: %s", d.domainName)
 			}
 
