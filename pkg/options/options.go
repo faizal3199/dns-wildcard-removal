@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 
 	"github.com/alexflint/go-arg"
@@ -22,6 +24,7 @@ type Options struct {
 	ResolverFile string
 	Threads      int
 	Output       string
+	LogLevel     log.Level
 }
 
 type internalOptions struct {
@@ -30,6 +33,7 @@ type internalOptions struct {
 	Resolver string `arg:"-r,required" help:"Path to file containing list of resolvers"`
 	Threads  int    `arg:"-t" default:"6" help:"Number of threads to run"`
 	Output   string `arg:"-o,required" help:"Path to output file. Use - for stdout"`
+	Verbose  bool   `arg:"-v" default:"false" help:"Enable debug level logs"`
 }
 
 func parseListOfResolversFromList(filePath string) (common.DNSServers, error) {
@@ -75,6 +79,11 @@ func ParseOptionsArguments() (Options, error) {
 		return Options{}, fmt.Errorf("non valid resolver(DNS Server) found")
 	}
 
+	logLevel := log.InfoLevel
+	if parsedOptions.Verbose {
+		logLevel = log.DebugLevel
+	}
+
 	returnOptions := Options{
 		Domain:       common.SanitizeDomainName(parsedOptions.Domain),
 		Input:        parsedOptions.Input,
@@ -82,6 +91,7 @@ func ParseOptionsArguments() (Options, error) {
 		ResolverFile: parsedOptions.Resolver,
 		Threads:      parsedOptions.Threads,
 		Output:       parsedOptions.Output,
+		LogLevel:     logLevel,
 	}
 
 	return returnOptions, nil

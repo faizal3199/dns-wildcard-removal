@@ -50,10 +50,12 @@ Start is the heart of the application. It initializes all the required component
 make each component work in sync.
 */
 func Start() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.WarnLevel)
 
 	args, err := options.ParseOptionsArguments()
 	common.FailOnError(err, "Error while parsing options and related files")
+
+	log.SetLevel(args.LogLevel)
 
 	var wg sync.WaitGroup
 
@@ -82,8 +84,8 @@ func Start() {
 	go func() {
 		wg.Wait()
 
-		close(outputChannel)
 		log.Infoln("Closing output channel")
+		close(outputChannel)
 	}()
 
 	// Call the blocking function. This wait until outputChannel is closed
