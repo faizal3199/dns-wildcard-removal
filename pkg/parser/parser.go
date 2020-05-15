@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
@@ -26,6 +28,8 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 		// Close pipeReader to avoid any potential issues
 		defer reader.Close()
 
+		parsedDomainsCount := 0
+
 		for scanner.Scan() {
 			line := scanner.Text()
 
@@ -34,6 +38,11 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 				if currentDomainRecords != nil {
 					c <- *currentDomainRecords
 					currentDomainRecords = nil
+					parsedDomainsCount++
+
+					if parsedDomainsCount%10000 == 0 {
+						log.Infof("Number of domains parsed until now: %d", parsedDomainsCount)
+					}
 				}
 				continue
 			}
@@ -69,7 +78,11 @@ func ParseAndPublishDNSRecords(reader *io.PipeReader, c chan<- common.DomainReco
 		if currentDomainRecords != nil {
 			c <- *currentDomainRecords
 			currentDomainRecords = nil
+			parsedDomainsCount++
 		}
+
+		log.Infof("Number of domains parsed from massdns output: %d", parsedDomainsCount)
+		log.Infoln("Closing parser output channel")
 	}()
 }
 

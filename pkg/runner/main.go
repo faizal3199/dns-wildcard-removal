@@ -81,8 +81,9 @@ func Start() {
 	// processing being done by any thread can be completed
 	go func() {
 		wg.Wait()
-		log.Debug("Closing output channel")
+
 		close(outputChannel)
+		log.Infoln("Closing output channel")
 	}()
 
 	// Call the blocking function. This wait until outputChannel is closed

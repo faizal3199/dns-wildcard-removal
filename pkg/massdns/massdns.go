@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 )
 
@@ -90,9 +92,11 @@ func StartMassdnsProcess(inputFile string, resolverFile string) (*io.PipeReader,
 	go func() {
 		err = cmd.Wait()
 		common.FailOnError(err, "massdns exited ungracefully")
+		log.Infoln("massdns command successfully executed")
 
 		err = pipeWrite.Close()
 		common.FailOnError(err, "Failed to close massdns output pipe")
+		log.Infoln("Closing massdns output pipe")
 	}()
 
 	return pipeRead, nil
