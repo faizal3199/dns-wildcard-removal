@@ -13,7 +13,7 @@ massdns's binary should be in PATH.
 ## Installation
 
 ```bash
-go get -v github.com/faizal3199/dns-wildcard-removal
+go get -v -u github.com/faizal3199/dns-wildcard-removal
 ```
 
 # Usage
