@@ -50,7 +50,7 @@ Start is the heart of the application. It initializes all the required component
 make each component work in sync.
 */
 func Start() {
-	log.SetLevel(log.WarnLevel)
+	log.SetLevel(log.InfoLevel)
 
 	args, err := options.ParseOptionsArguments()
 	common.FailOnError(err, "Error while parsing options and related files")
