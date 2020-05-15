@@ -106,15 +106,18 @@ func (d *WildcardDomain) fetchDNSRecordsInBackground(resolvers common.DNSServers
 			resolverIndex = (resolverIndex + 1) % numberOfResolvers
 
 			// Using random subdomains will also help avoid caching done by resolver
-			res, err := dnsengine.GetDNSRecords(common.DNSServers{resolver}, GetRandomSubdomain(d.domainName))
+			randomSubdomain := GetRandomSubdomain(d.domainName)
+			res, err := dnsengine.GetDNSRecords(common.DNSServers{resolver}, randomSubdomain)
 
-			log.Debugf("Got DNS records for %s\nerr = %v\nres = %v", d.domainName, err, res)
+			log.Debugf("Got DNS records for %s\nsubdomain = %s\nerr = %v\nres = %v",
+				d.domainName, randomSubdomain, err, res)
 
 			if err == nil {
 				d.result = append(d.result, res)
 				i-- // Keep resolving until we get all the successful instances
 			} else {
-				log.Infof("Got error while resolving for '%s'\nErr: %v", d.domainName, err)
+				log.Infof("Got error while resolving a subdomain of %s\nsubdomain = %s\nerr = %v",
+					d.domainName, randomSubdomain, err)
 				d.resolverErr = fmt.Errorf("error resolving: %s", d.domainName)
 			}
 
