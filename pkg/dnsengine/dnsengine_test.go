@@ -82,10 +82,25 @@ func TestGetDNSRecords(t *testing.T) {
 			name: "Test for Invalid DNS resolver",
 			args: args{
 				resolvers: common.DNSServers{"1.2.3.4"},
-				domain:    "nx.dns-test.faizalhasanwala.me.",
+				domain:    "nx.root-servers.net.",
 			},
 			want:    nil,
 			wantErr: true,
+		},
+		{
+			name: "Test for Invalid DNS resolver with a valid one",
+			args: args{
+				resolvers: common.DNSServers{"1.2.3.4", "1.1.1.1"},
+				domain:    "a.root-servers.net.",
+			},
+			want: common.DNSRecordSet{
+				{
+					Name:  "a.root-servers.net.",
+					Type:  "A",
+					Value: "198.41.0.4",
+				},
+			},
+			wantErr: false,
 		},
 	}
 

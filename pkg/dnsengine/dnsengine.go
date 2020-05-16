@@ -1,6 +1,7 @@
 package dnsengine
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -10,48 +11,136 @@ import (
 )
 
 /*
+resultPair is used to for passing data in channel
+*/
+type resultPair struct {
+	res common.DNSRecordSet
+	err error
+}
+
+/*
+dnsClientWithQueryMessage hold pointers to dns.Client and dns.Msg
+*/
+type dnsClientWithQueryMessage struct {
+	client     *dns.Client
+	msg        *dns.Msg
+	domainName string
+}
+
+/*
+createDNSRecordSetFromAnswer creates a common.DNSRecordSet from dns.Msg.Answer(alias to []RR) structure
+*/
+func createDNSRecordSetFromAnswer(answer []dns.RR) (common.DNSRecordSet, error) {
+	dnsRecordsObject := common.DNSRecordSet{}
+
+	for _, record := range answer {
+		queryName := common.SanitizeDomainName(record.Header().Name)
+		recordType := dns.Type(record.Header().Rrtype).String()
+		recordValue := ""
+
+		switch v := record.(type) {
+		case *dns.A:
+			recordValue = v.A.String()
+		case *dns.CNAME:
+			recordValue = common.SanitizeDomainName(v.Target)
+		case *dns.NS:
+			recordValue = v.Ns
+		}
+
+		if recordValue == "" {
+			return nil, fmt.Errorf("unknown record type: %v", record)
+		}
+
+		newRecord := common.DNSRecord{Name: queryName, Type: recordType, Value: recordValue}
+		dnsRecordsObject = append(dnsRecordsObject, newRecord)
+	}
+
+	return dnsRecordsObject, nil
+
+}
+
+/*
+resolveWithSingleResolver attempts to query the message m to provides resolver.
+*/
+func (x *dnsClientWithQueryMessage) resolveWithSingleResolver(resolver common.IPAddressType,
+	valueChan chan<- resultPair, ctx context.Context) {
+	r, _, _ := x.client.Exchange(
+		x.msg,
+		net.JoinHostPort(resolver, "53"),
+	)
+
+	var result resultPair
+
+	if r == nil {
+		result = resultPair{
+			res: nil,
+			err: fmt.Errorf("failed to resolve: %s", x.domainName),
+		}
+	} else {
+		recordSet, err := createDNSRecordSetFromAnswer(r.Answer)
+
+		if err == nil {
+			result = resultPair{
+				res: recordSet,
+				err: nil,
+			}
+		} else {
+			result = resultPair{
+				res: nil,
+				err: err,
+			}
+		}
+	}
+
+	select {
+	case <-ctx.Done():
+		return
+	case valueChan <- result:
+		return
+	}
+}
+
+/*
 GetDNSRecords returns CNAME or A records for given domain name
 */
 func GetDNSRecords(resolvers common.DNSServers, domain common.DomainType) (common.DNSRecordSet, error) {
-	c := new(dns.Client)
-	m := new(dns.Msg)
+	x := new(dnsClientWithQueryMessage)
+	x.domainName = common.SanitizeDomainName(domain)
+	x.client = new(dns.Client)
 
-	m.SetQuestion(dns.Fqdn(domain), dns.TypeA)
-	m.RecursionDesired = true
+	tmpMsg := new(dns.Msg)
+	tmpMsg.SetQuestion(dns.Fqdn(domain), dns.TypeA)
+	tmpMsg.RecursionDesired = true
+	x.msg = tmpMsg
 
-	dnsRecordsObject := common.DNSRecordSet{}
+	// Can't use a channel because that will only provide value to one goroutine
+	// and leave other hanging causing leak
+	ctx, cancel := context.WithCancel(context.Background())
+	valueChan := make(chan resultPair)
+
+	defer func() {
+		// Cancel the context, this will signal all remaining go routines to return
+		// No need to close the channel it will be garbage collected
+		cancel()
+	}()
+
+	waitCount := 0
 
 	for _, resolver := range resolvers {
-		r, _, _ := c.Exchange(
-			m,
-			net.JoinHostPort(resolver, "53"),
-		)
+		go x.resolveWithSingleResolver(resolver, valueChan, ctx)
+		waitCount++
+	}
 
-		if r != nil {
-			for _, record := range r.Answer {
-				queryName := common.SanitizeDomainName(record.Header().Name)
-				recordType := dns.Type(record.Header().Rrtype).String()
-				recordValue := ""
+	// Wait until one resolver gives satisfactory reply
+	// In case no one provides satisfactory reply exit the loop
+	for waitCount > 0 {
+		result := <-valueChan
 
-				switch v := record.(type) {
-				case *dns.A:
-					recordValue = v.A.String()
-				case *dns.CNAME:
-					recordValue = common.SanitizeDomainName(v.Target)
-				case *dns.NS:
-					recordValue = v.Ns
-				}
-
-				if recordValue == "" {
-					return nil, fmt.Errorf("unknown record type: %v", record)
-				}
-
-				newRecord := common.DNSRecord{Name: queryName, Type: recordType, Value: recordValue}
-				dnsRecordsObject = append(dnsRecordsObject, newRecord)
-			}
-
-			return dnsRecordsObject, nil
+		if result.err == nil {
+			return result.res, result.err
 		}
+
+		waitCount--
 	}
 
 	return nil, fmt.Errorf("failed to resolve: %s", domain)

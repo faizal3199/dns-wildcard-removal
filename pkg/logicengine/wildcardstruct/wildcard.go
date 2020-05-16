@@ -94,20 +94,12 @@ func (d *WildcardDomain) fetchDNSRecordsInBackground(resolvers common.DNSServers
 		i := numberOfTest - 1
 		maxTests := numberOfTest * 2
 
-		numberOfResolvers := len(resolvers)
-		// Use this randomized order to access resolvers from the list
-		randomOrder := rand.Perm(numberOfResolvers)
-		resolverIndex := 0
-
 		for i >= 0 && maxTests >= 0 {
-			// We may end up using only a subset of resolvers : So randomize
-			// If in case we have more tests : Try to use all
-			resolver := resolvers[randomOrder[resolverIndex]]
-			resolverIndex = (resolverIndex + 1) % numberOfResolvers
-
 			// Using random subdomains will also help avoid caching done by resolver
 			randomSubdomain := GetRandomSubdomain(d.domainName)
-			res, err := dnsengine.GetDNSRecords(common.DNSServers{resolver}, randomSubdomain)
+			// Use all the resolvers to query the results instead of selecting a specific one.
+			// As, a random subdomain is used this will lead to a virtually no chance of caching
+			res, err := dnsengine.GetDNSRecords(resolvers, randomSubdomain)
 
 			log.Debugf("Got DNS records for %s\nsubdomain = %s\nerr = %v\nres = %v",
 				d.domainName, randomSubdomain, err, res)
