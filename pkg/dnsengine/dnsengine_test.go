@@ -136,7 +136,7 @@ func TestGetParentDomain(t *testing.T) {
 			name: "Domain name with spaces",
 			args: args{
 				domain:    " xyz.a.root-servers.net ",
-				jobDomain: "root-server.net.",
+				jobDomain: "root-servers.net.",
 			},
 			want:    []string{"root-servers.net.", "a.root-servers.net."},
 			wantErr: false,
@@ -191,6 +191,24 @@ func TestGetParentDomain(t *testing.T) {
 			args: args{
 				domain:    "net",
 				jobDomain: "root-servers.net.",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Out of scope domain: similar ending",
+			args: args{
+				domain:    "abc.not-example.com",
+				jobDomain: "example.com",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "Out of scope domain: non-similar ending",
+			args: args{
+				domain:    "abc.evil.com",
+				jobDomain: "example.com",
 			},
 			want:    nil,
 			wantErr: true,

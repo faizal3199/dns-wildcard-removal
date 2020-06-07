@@ -154,6 +154,8 @@ func GetParentDomain(domain string, jobDomain string) ([]string, error) {
 	domain = strings.Trim(common.SanitizeDomainName(domain), ".")
 	jobDomain = strings.Trim(common.SanitizeDomainName(jobDomain), ".")
 
+	errToReturn := fmt.Errorf("domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)
+
 	parts := strings.Split(domain, ".")
 	jobParts := strings.Split(jobDomain, ".")
 
@@ -161,20 +163,28 @@ func GetParentDomain(domain string, jobDomain string) ([]string, error) {
 	jobDomain += "."
 
 	if len(parts) < len(jobParts) {
-		return nil, fmt.Errorf("domain out-of-scope for '%s', in context of '%s'", domain, jobDomain)
+		return nil, errToReturn
 	} else if len(parts) == len(jobParts) {
-		return []string{jobDomain}, nil
-	} else {
-		listTillTop := make([]string, 0)
-
-		// Ignore the deepest label. We need it's parents
-		parts := parts[1:]
-
-		for i := len(parts) - len(jobParts); i >= 0; i-- {
-			tmp := strings.Join(parts[i:], ".") + "."
-			listTillTop = append(listTillTop, tmp)
+		if jobDomain != domain {
+			return nil, errToReturn
 		}
-
-		return listTillTop, nil
+		return []string{jobDomain}, nil
 	}
+
+	// Extra '.' to avoid matching in cases like 'abc.not-example.com' & 'example.com'
+	if !strings.HasSuffix(domain, "."+jobDomain) {
+		return nil, errToReturn
+	}
+
+	listTillTop := make([]string, 0)
+
+	// Ignore the deepest label. We need it's parents
+	parts = parts[1:]
+
+	for i := len(parts) - len(jobParts); i >= 0; i-- {
+		tmp := strings.Join(parts[i:], ".") + "."
+		listTillTop = append(listTillTop, tmp)
+	}
+
+	return listTillTop, nil
 }
