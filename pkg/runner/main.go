@@ -3,14 +3,14 @@ package runner
 import (
 	"sync"
 
+	"github.com/faizal3199/dns-wildcard-removal/pkg/dnshandler"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/faizal3199/dns-wildcard-removal/pkg/common"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/logicengine"
-	"github.com/faizal3199/dns-wildcard-removal/pkg/massdns"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/options"
 	"github.com/faizal3199/dns-wildcard-removal/pkg/output"
-	"github.com/faizal3199/dns-wildcard-removal/pkg/parser"
 )
 
 /*
@@ -60,23 +60,21 @@ func Start() {
 	var wg sync.WaitGroup
 
 	// Init channels
-	parserChannel := parser.CreateChannel()
+	//parserChannel := parser.CreateChannel()
+	dnsHandlerChannel := dnshandler.CreateChannel()
 	outputChannel := output.CreateChannel()
 
 	// Init logic engine
 	logicEngine := logicengine.CreateLogicEngineInstance(args.Domain, args.Resolver)
 
-	// Starts massdns process in background
-	massdnsOutputPipe, err := massdns.StartMassdnsProcess(args.Input, args.ResolverFile)
+	// Starts dns resolution in background
+	err = dnshandler.ResolveFromInputFile(args.Input, args.Resolver, dnsHandlerChannel)
 	common.FailOnError(err, "Error initializing massdns")
-
-	// Start parser in background
-	parser.ParseAndPublishDNSRecords(massdnsOutputPipe, parserChannel)
 
 	log.Debugf("Initializing %d workers", args.Threads)
 	for i := 0; i < args.Threads; i++ {
 		wg.Add(1)
-		go worker(logicEngine, parserChannel, outputChannel, &wg)
+		go worker(logicEngine, dnsHandlerChannel, outputChannel, &wg)
 	}
 
 	// Wait for all goroutines to complete. This way any long
